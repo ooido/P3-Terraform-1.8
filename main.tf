@@ -114,8 +114,8 @@ module "eks" {
 
   aws_auth_users = [
     {
-      userarn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/kube"
-      username = "kube"
+      userarn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/p3"
+      username = "p3"
       groups   = ["system:masters"]
     },
   ]
@@ -219,6 +219,7 @@ resource "aws_iam_user_policy" "kubernetes-access" {
         ]
     })
 }
+
 
 #aws-auth may need to do this either manually or with terraform to actually give the iam user control
 

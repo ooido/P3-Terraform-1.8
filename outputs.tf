@@ -60,5 +60,11 @@ output "access_key_id" {
 }
 
 output "access_key_secret"{
+  sensitive = true
   value = aws_iam_access_key.p3_key.secret
+}
+
+output "aws_auth_configmap_yaml" {
+  description = "Formatted yaml output for base aws-auth configmap containing roles used in cluster node groups/fargate profiles"
+  value       = module.eks.aws_auth_configmap_yaml
 }
