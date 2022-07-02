@@ -1,0 +1,59 @@
+Questions:
+
+    Q: How do we publicly expose the cluster/services/applications to the internet?
+        A: Maybe the answer is with nginx deployment & ingresses or a loadbalancer.
+
+    How can we automate the setup we need?
+    A1: Terraform can do this.
+    A2: Helm
+    A3: Manually with yaml files.
+
+        nginx
+        Metrics server
+        Dashboard
+        Prometheus
+        Grafana
+        Jenkins
+
+    How do we persist these using Persistent Volumes and PersistentVolumeClaims?
+
+General Links:
+    Terraform AWS resources
+	    https://registry.terraform.io/providers/hashicorp/aws/2.52.0/docs/resources/eks_cluster
+
+	Managing Kubernetes Resources via Terraform
+	    https://learn.hashicorp.com/tutorials/terraform/kubernetes-provider?in=terraform%2Fkubernetes
+
+    Amazon EKS Userguide
+	    https://docs.aws.amazon.com/eks/latest/userguide/what-is-eks.html
+
+Notes:
+
+	manual installation:
+
+        Using Helm with EKS
+            Charts -> https://artifacthub.io
+            https://docs.aws.amazon.com/eks/latest/userguide/helm.html
+
+        Installing Kubernetes Metrics Server
+
+            https://docs.aws.amazon.com/eks/latest/userguide/metrics-server.html
+
+        Installing Dashboard
+
+            https://docs.aws.amazon.com/eks/latest/userguide/dashboard-tutorial.html
+
+        Installing Prometheus
+
+            https://docs.aws.amazon.com/eks/latest/userguide/prometheus.html
+
+        Installing Jenkins
+
+            https://www.jenkins.io/doc/book/installing/kubernetes/
+            https://artifacthub.io/packages/helm/jenkinsci/jenkins#configuration
+
+        Installing SonarQube?
+            Cluster or on jenkins? There is a helm chart for this.
+            Jenkins:
+                https://docs.sonarqube.org/latest/analysis/scan/sonarscanner-for-jenkins/
+                https://docs.sonarqube.org/latest/analysis/jenkins/

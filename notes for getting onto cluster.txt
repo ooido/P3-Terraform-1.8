@@ -1,0 +1,19 @@
+check secret:
+	ex: terraform output outputname
+		terraform output access_key_id
+		terraform output access_key_secret
+
+create:
+	ex: aws configure --profile name
+		aws configure --p3u
+		enter id, enter secret, enter us-east-1
+
+after terraform:
+	aws eks update-kubeconfig --name ben-project-3-sre --region us-east-1
+
+change aws cli profile:
+
+	https://stackoverflow.com/questions/49716583/how-to-temporarily-switch-profiles-for-aws-cli
+	
+	export AWS_PROFILE=profilename
+	
