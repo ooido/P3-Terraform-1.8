@@ -5,7 +5,7 @@ check secret:
 
 create:
 	ex: aws configure --profile name
-		aws configure --p3u
+		aws configure --profile p3u
 		enter id, enter secret, enter us-east-1
 
 after terraform:
@@ -15,5 +15,10 @@ change aws cli profile:
 
 	https://stackoverflow.com/questions/49716583/how-to-temporarily-switch-profiles-for-aws-cli
 	
-	export AWS_PROFILE=profilename
-	
+	ex: export AWS_PROFILE=profilename
+	    export AWS_PROFILE=p3u
+
+check you changed profile:
+    aws configure list
+
+
