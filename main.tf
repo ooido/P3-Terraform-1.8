@@ -186,21 +186,21 @@ resource "aws_security_group" "additional" {
   }
 }
 
-resource "aws_iam_user" "kube" {
-    name = "kube"
-    path = "/system/"
+resource "aws_iam_user" "p3" {
+    name = "p3"
+    path = "/"
 }
 
-resource "aws_iam_access_key" "kube" {
-    user = aws_iam_user.kube.name
+resource "aws_iam_access_key" "p3_key" {
+    user = aws_iam_user.p3.name
 }
 
 resource "aws_iam_user_policy" "kubernetes-access" {
     depends_on = [
       module.eks
     ]
-    name= "access"
-    user = aws_iam_user.kube.name
+    name = "kubernetes-access"
+    user = aws_iam_user.p3.name
 
     policy = jsonencode({    
         "Version": "2012-10-17",
@@ -209,11 +209,19 @@ resource "aws_iam_user_policy" "kubernetes-access" {
                 "Sid":"VisualEditor0",
                 "Effect":"Allow",
                 "Action":[
-                "eks:AccessKubernetesApi",
-                "eks:DescribeCluster",
-                "eks:ListClusters"],
+                  "eks:AccessKubernetesApi",
+                  "eks:DescribeNodegroup",
+                  "eks:ListNodegroups",
+                  "eks:DescribeCluster",
+                ],
                 "Resource":"${module.eks.cluster_arn}"
             }
         ]
     })
 }
+
+#aws-auth may need to do this either manually or with terraform to actually give the iam user control
+
+# https://www.ahead.com/resources/automate-iam-role-mapping-on-amazon-eks/
+
+# https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest#output_aws_auth_configmap_yaml

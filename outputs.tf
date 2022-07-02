@@ -54,12 +54,11 @@ output "cluster_security_group_arn" {
   value       = module.eks.cluster_security_group_arn
 }
 
-
 #Iam user
-output "iam_access_key" {
-    description = "Access key for our iam group"
-    value = aws_iam_access_key.kube.secret
-    sensitive = true
+output "access_key_id" {
+  value = aws_iam_access_key.p3_key.id
 }
 
-
+output "access_key_secret"{
+  value = aws_iam_access_key.p3_key.secret
+}
