@@ -56,15 +56,21 @@ output "cluster_security_group_arn" {
 
 #Iam user
 output "access_key_id" {
-  value = aws_iam_access_key.p3_key.id
+  value = aws_iam_access_key.ben_arayathel_p3_rss_key.id
 }
 
 output "access_key_secret"{
   sensitive = true
-  value = aws_iam_access_key.p3_key.secret
+  value = aws_iam_access_key.ben_arayathel_p3_rss_key.secret
 }
 
-output "aws_auth_configmap_yaml" {
-  description = "Formatted yaml output for base aws-auth configmap containing roles used in cluster node groups/fargate profiles"
-  value       = module.eks.aws_auth_configmap_yaml
+#autoscaler user
+output "autoscaler_access_key_id" {
+  value = aws_iam_access_key.ben_arayathel_p3_rss_autoscaler_key.id
 }
+
+output "autoscaler_access_key_secret"{
+  sensitive = true
+  value = aws_iam_access_key.ben_arayathel_p3_rss_autoscaler_key.secret
+}
+

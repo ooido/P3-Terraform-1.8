@@ -30,7 +30,7 @@ data "aws_caller_identity" "current" {}
 module "eks" {
   source = "terraform-aws-modules/eks/aws"
   version = "18.26.2"
-  cluster_version = "1.23"
+  cluster_version = "1.22" #1.23 is not supported by eks
 
   cluster_name = local.cluster_name
   cluster_endpoint_private_access = true
@@ -97,7 +97,7 @@ module "eks" {
     ben = {
       min_size     = 2
       max_size     = 6
-      desired_size = 2
+      desired_size = 3
 
       instance_types = ["t3.large"]
       capacity_type  = "ON_DEMAND"
@@ -113,8 +113,13 @@ module "eks" {
 
   aws_auth_users = [
     {
-      userarn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/p3"
-      username = "p3"
+      userarn  = aws_iam_user.ben_arayathel_p3_rss.arn #arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/p3
+      username = "ben_arayathel_p3_rss"
+      groups   = ["system:masters"]
+    },
+    {
+      userarn  = aws_iam_user.ben_arayathel_p3_rss_autoscaler.arn
+      username = "ben_arayathel_p3_rss_autoscaler"
       groups   = ["system:masters"]
     },
   ]
@@ -185,21 +190,27 @@ resource "aws_security_group" "additional" {
   }
 }
 
-resource "aws_iam_user" "p3" {
-    name = "p3"
+resource "aws_iam_user" "ben_arayathel_p3_rss" {
+    name = "ben_arayathel_p3_rss"
     path = "/"
 }
 
-resource "aws_iam_access_key" "p3_key" {
-    user = aws_iam_user.p3.name
+resource "aws_iam_access_key" "ben_arayathel_p3_rss_key" {
+  user = aws_iam_user.ben_arayathel_p3_rss.name
+}
+
+resource "aws_iam_user" "ben_arayathel_p3_rss_autoscaler" {
+  name = "ben_arayathel_p3_rss_autoscaler"
+  path = "/"
+}
+
+resource "aws_iam_access_key" "ben_arayathel_p3_rss_autoscaler_key" {
+    user = aws_iam_user.ben_arayathel_p3_rss_autoscaler.name
 }
 
 resource "aws_iam_user_policy" "kubernetes-access" {
-    depends_on = [
-      module.eks
-    ]
     name = "kubernetes-access"
-    user = aws_iam_user.p3.name
+    user = aws_iam_user.ben_arayathel_p3_rss.name
 
     policy = jsonencode({    
         "Version": "2012-10-17",
@@ -210,19 +221,37 @@ resource "aws_iam_user_policy" "kubernetes-access" {
                 "Action":[
                   "eks:AccessKubernetesApi",
                   "eks:DescribeCluster",
-                  "eks:DescribeNodegroup",
-                  #"eks:ListNodegroups", #Minimal Autoscaler Permissions for manual config
-                  #"autoscaling:DescribeAutoScalingGroups",
-                  #"autoscaling:DescribeAutoScalingInstances",
-                  #"autoscaling:DescribeLaunchConfigurations",
-                  #"autoscaling:DescribeScalingActivities",
-                  #"autoscaling:SetDesiredCapacity",
-                  #"autoscaling:TerminateInstanceInAutoScalingGroup",
                 ],
-                "Resource":"${module.eks.cluster_arn}" #maybe this should be different for autoscaler? entirely different user?
+                "Resource":"${module.eks.cluster_arn}"
             }
         ]
     })
+}
+
+resource "aws_iam_user_policy" "autoscaler-access" {
+  name = "autoscaler-access"
+  user = aws_iam_user.ben_arayathel_p3_rss_autoscaler.name
+
+  policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement":[
+      {
+        "Sid":"VisualEditor0",
+        "Effect":"Allow",
+        "Action":[ #Minimal Autoscaler Permissions for manual config
+          "eks:DescribeNodegroup",
+          "autoscaling:DescribeAutoScalingGroups",
+          "autoscaling:DescribeAutoScalingInstances",
+          "autoscaling:DescribeLaunchConfigurations",
+          "autoscaling:DescribeScalingActivities",
+          "autoscaling:SetDesiredCapacity",
+          "autoscaling:TerminateInstanceInAutoScalingGroup",
+        ],
+        "Resource":"${module.eks.cluster_arn}" #maybe this should be different for autoscaler?
+        #"Resource": ["arn:aws:autoscaling:${local.region}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${insert_autoscaler_group_name"]
+      }
+    ]
+  })
 }
 
 
