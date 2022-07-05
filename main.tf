@@ -87,10 +87,12 @@ module "eks" {
    # EKS Managed Node Group(s)
   eks_managed_node_group_defaults = {
     ami_type       = "AL2_x86_64"
-    instance_types = ["t3.large"]
+    instance_types = ["t3.micro"]
 
     attach_cluster_primary_security_group = false
     vpc_security_group_ids                = [aws_security_group.additional.id]
+    # Attaching policy for autoscaler.
+    iam_role_additional_policies = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/ben_arayathel_p3_autoscaler_policy"] 
   }
 
   eks_managed_node_groups = {
@@ -99,7 +101,7 @@ module "eks" {
       max_size     = 6
       desired_size = 3
 
-      instance_types = ["t3.large"]
+      instance_types = ["t3.micro"]
       capacity_type  = "ON_DEMAND"
 
       update_config = {
@@ -115,11 +117,6 @@ module "eks" {
     {
       userarn  = aws_iam_user.ben_arayathel_p3_rss.arn #arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/p3
       username = "ben_arayathel_p3_rss"
-      groups   = ["system:masters"]
-    },
-    {
-      userarn  = aws_iam_user.ben_arayathel_p3_rss_autoscaler.arn
-      username = "ben_arayathel_p3_rss_autoscaler"
       groups   = ["system:masters"]
     },
   ]
@@ -199,15 +196,6 @@ resource "aws_iam_access_key" "ben_arayathel_p3_rss_key" {
   user = aws_iam_user.ben_arayathel_p3_rss.name
 }
 
-resource "aws_iam_user" "ben_arayathel_p3_rss_autoscaler" {
-  name = "ben_arayathel_p3_rss_autoscaler"
-  path = "/"
-}
-
-resource "aws_iam_access_key" "ben_arayathel_p3_rss_autoscaler_key" {
-    user = aws_iam_user.ben_arayathel_p3_rss_autoscaler.name
-}
-
 resource "aws_iam_user_policy" "kubernetes-access" {
     name = "kubernetes-access"
     user = aws_iam_user.ben_arayathel_p3_rss.name
@@ -228,32 +216,39 @@ resource "aws_iam_user_policy" "kubernetes-access" {
     })
 }
 
-resource "aws_iam_user_policy" "autoscaler-access" {
-  name = "autoscaler-access"
-  user = aws_iam_user.ben_arayathel_p3_rss_autoscaler.name
+resource "aws_iam_policy" "ben_arayathel_p3_autoscaler_policy" {
 
-  policy = jsonencode({
+  name = "ben_arayathel_p3_autoscaler_policy"
+
+   policy = jsonencode({
     "Version": "2012-10-17",
     "Statement":[
       {
         "Sid":"VisualEditor0",
         "Effect":"Allow",
-        "Action":[ #Minimal Autoscaler Permissions for manual config
-          "eks:DescribeNodegroup",
-          "autoscaling:DescribeAutoScalingGroups",
-          "autoscaling:DescribeAutoScalingInstances",
-          "autoscaling:DescribeLaunchConfigurations",
-          "autoscaling:DescribeScalingActivities",
-          "autoscaling:SetDesiredCapacity",
-          "autoscaling:TerminateInstanceInAutoScalingGroup",
-        ],
-        "Resource":"${module.eks.cluster_arn}" #maybe this should be different for autoscaler?
-        #"Resource": ["arn:aws:autoscaling:${local.region}:${data.aws_caller_identity.current.account_id}:autoScalingGroup:*:autoScalingGroupName/${insert_autoscaler_group_name"]
+      "Action": [
+        "autoscaling:DescribeAutoScalingGroups",
+        "autoscaling:DescribeAutoScalingInstances",
+        "autoscaling:DescribeLaunchConfigurations",
+        "autoscaling:DescribeTags",
+        "ec2:DescribeInstanceTypes",
+        "ec2:DescribeLaunchTemplateVersions"
+      ],
+      "Resource": ["*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "autoscaling:SetDesiredCapacity",
+        "autoscaling:TerminateInstanceInAutoScalingGroup",
+        "ec2:DescribeInstanceTypes",
+        "eks:DescribeNodegroup"
+      ],
+      "Resource": ["*"]
       }
     ]
-  })
+  }) 
 }
-
 
 #aws-auth may need to do this either manually or with terraform to actually give the iam user control
 

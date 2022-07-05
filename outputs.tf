@@ -64,13 +64,4 @@ output "access_key_secret"{
   value = aws_iam_access_key.ben_arayathel_p3_rss_key.secret
 }
 
-#autoscaler user
-output "autoscaler_access_key_id" {
-  value = aws_iam_access_key.ben_arayathel_p3_rss_autoscaler_key.id
-}
-
-output "autoscaler_access_key_secret"{
-  sensitive = true
-  value = aws_iam_access_key.ben_arayathel_p3_rss_autoscaler_key.secret
-}
 
