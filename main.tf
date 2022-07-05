@@ -1,6 +1,5 @@
 provider "aws" {
     region = local.region
-  
 }
 
 provider "kubernetes" {
@@ -31,6 +30,7 @@ data "aws_caller_identity" "current" {}
 module "eks" {
   source = "terraform-aws-modules/eks/aws"
   version = "18.26.2"
+  cluster_version = "1.23"
 
   cluster_name = local.cluster_name
   cluster_endpoint_private_access = true
@@ -87,20 +87,19 @@ module "eks" {
    # EKS Managed Node Group(s)
   eks_managed_node_group_defaults = {
     ami_type       = "AL2_x86_64"
-    instance_types = ["t3.micro"]
+    instance_types = ["t3.large"]
 
-    attach_cluster_primary_security_group = true
+    attach_cluster_primary_security_group = false
     vpc_security_group_ids                = [aws_security_group.additional.id]
   }
 
   eks_managed_node_groups = {
-    blue = {}
-    green = {
+    ben = {
       min_size     = 2
       max_size     = 6
-      desired_size = 3
+      desired_size = 2
 
-      instance_types = ["t3.micro"]
+      instance_types = ["t3.large"]
       capacity_type  = "ON_DEMAND"
 
       update_config = {
@@ -210,11 +209,17 @@ resource "aws_iam_user_policy" "kubernetes-access" {
                 "Effect":"Allow",
                 "Action":[
                   "eks:AccessKubernetesApi",
-                  "eks:DescribeNodegroup",
-                  "eks:ListNodegroups",
                   "eks:DescribeCluster",
+                  "eks:DescribeNodegroup",
+                  #"eks:ListNodegroups", #Minimal Autoscaler Permissions for manual config
+                  #"autoscaling:DescribeAutoScalingGroups",
+                  #"autoscaling:DescribeAutoScalingInstances",
+                  #"autoscaling:DescribeLaunchConfigurations",
+                  #"autoscaling:DescribeScalingActivities",
+                  #"autoscaling:SetDesiredCapacity",
+                  #"autoscaling:TerminateInstanceInAutoScalingGroup",
                 ],
-                "Resource":"${module.eks.cluster_arn}"
+                "Resource":"${module.eks.cluster_arn}" #maybe this should be different for autoscaler? entirely different user?
             }
         ]
     })
