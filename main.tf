@@ -87,7 +87,7 @@ module "eks" {
    # EKS Managed Node Group(s)
   eks_managed_node_group_defaults = {
     ami_type       = "AL2_x86_64"
-    instance_types = ["t3.micro"]
+    instance_types = ["t3.large"]
 
     attach_cluster_primary_security_group = false
     vpc_security_group_ids                = [aws_security_group.additional.id]
@@ -101,7 +101,7 @@ module "eks" {
       max_size     = 6
       desired_size = 3
 
-      instance_types = ["t3.micro"]
+      instance_types = ["t3.large"]
       capacity_type  = "ON_DEMAND"
 
       update_config = {
@@ -217,7 +217,6 @@ resource "aws_iam_user_policy" "kubernetes-access" {
 }
 
 resource "aws_iam_policy" "ben_arayathel_p3_autoscaler_policy" {
-
   name = "ben_arayathel_p3_autoscaler_policy"
 
    policy = jsonencode({
